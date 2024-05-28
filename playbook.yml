@@ -1,0 +1,67 @@
+---
+- name: Installeer en configureer Dovecot en Certbot
+  hosts: host1
+  become: yes
+  vars:
+    dovecot_ssl_cert: /etc/ssl/certs/dovecot.crt
+    dovecot_ssl_key: /etc/ssl/private/dovecot.key
+    dovecot_mail_location: mbox:~/mail:INBOX=/var/mail/%u
+    dovecot_imap_port: 993
+    dovecot_pop3_port: 995
+
+  tasks:
+    - name: Installeer Dovecot-pakket
+      yum:
+        name: dovecot
+        state: present
+
+    - name: Installeer Certbot-pakket
+      pip:
+        name:
+          - certbot
+          - certbot-nginx
+        executable: pip3
+
+    - name: Register certbot
+      shell: |
+        certbot -n register --agree-tos --email mohamedbitit030@gmail.com
+        touch /etc/letsencrypt/.registered
+      args:
+        creates: /etc/letsencrypt/.registered
+
+    - name: Setup cronjob for renewal
+      cron:
+        name: Renew Let's Encrypt Certificates
+        job: "/usr/bin/certbot renew --quiet --deploy-hook 'systemctl restart dovecot'"
+        minute: "0"
+        hour: "3"
+        day: "1"
+        month: "*/3"
+        weekday: "*"
+
+    - name: Creëer Dovecot configuratiebestand
+      template:
+        src: dovecot.conf.j2
+        dest: /etc/dovecot/dovecot.conf
+      notify: restart dovecot
+
+    - name: Start en activeer Dovecot-service
+      systemd:
+        name: dovecot
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: restart dovecot
+      systemd:
+        name: dovecot
+        state: restarted
+
+#requirements
+
+- name: Installeer vereisten
+  hosts: host1
+  tasks:
+    - name: Installeer vereiste Python-pakketten
+      pip:
+        requirements: ./requirements.txt
