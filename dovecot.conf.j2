@@ -1,0 +1,31 @@
+# Dovecot configuratiebestand
+
+# Protocollen om te activeren
+protocols = imap pop3
+
+# SSL configuratie
+ssl = {{ dovecot_ssl_enabled | default('yes') }}
+ssl_cert = {{ dovecot_ssl_cert }}
+ssl_key = {{ dovecot_ssl_key }}
+
+# Mailbox configuratie
+mail_location = {{ dovecot_mail_location }}
+
+# Gebruikersauthenticatie
+auth_mechanisms = plain login
+
+# Loginstellingen
+log_path = /var/log/dovecot.log
+
+# IMAP en POP3 poorten
+service imap-login {
+  inet_listener imap {
+    port = {{ dovecot_imap_port }}
+  }
+}
+
+service pop3-login {
+  inet_listener pop3 {
+    port = {{ dovecot_pop3_port }}
+  }
+}
