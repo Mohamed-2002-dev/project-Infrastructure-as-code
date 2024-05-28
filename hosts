@@ -1,0 +1,1 @@
+host1 ansible_host=192.168.74.137 ansible_fqdn=mail.example.com ansible_user=s143594 ansible_ssh_private_key_file=~/.ssh/id_rsa
