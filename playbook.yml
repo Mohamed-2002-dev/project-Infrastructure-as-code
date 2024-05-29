@@ -1,4 +1,15 @@
 ---
+- name: Installeer Postfix
+  hosts: host1
+  become: yes
+
+  tasks:
+    - name: Installeer Postfix
+      package:
+        name: postfix
+        state: present
+
+
 - name: Installeer en configureer Dovecot en Certbot
   hosts: host1
   become: yes
@@ -22,6 +33,12 @@
           - certbot-nginx
         executable: pip3
 
+    - name: Maak directory /etc/letsencrypt/ aan
+      file:
+        path: /etc/letsencrypt
+        state: directory
+      become: yes
+
     - name: Register certbot
       shell: |
         certbot -n register --agree-tos --email mohamedbitit030@gmail.com
@@ -41,9 +58,10 @@
 
     - name: Creëer Dovecot configuratiebestand
       template:
-        src: dovecot.conf.j2
+        src:   roles/dovecot.conf.j2
         dest: /etc/dovecot/dovecot.conf
       notify: restart dovecot
+      become: true
 
     - name: Start en activeer Dovecot-service
       systemd:
